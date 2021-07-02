@@ -3,7 +3,7 @@ use hdk::prelude::*;
 
 mod utils;
 
-use utils::{err, get_latest_link};
+use utils::err;
 
 //TODO
 // DNA needs spam protection since it is supposed to be public
@@ -54,11 +54,6 @@ pub struct NeighbourhoodData {
     meta: Perspective
 }
 
-#[derive(Clone, SerializedBytes, Serialize, Deserialize, Debug)]
-pub struct CreateNeighbourhoodExpression {
-    pub key: String,
-    pub neighbourhood: NeighbourhoodExpression,
-}
 
 #[hdk_entry(id = "key", visbility = "public")]
 #[derive(Clone)]
@@ -79,49 +74,26 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 #[hdk_extern]
-pub fn index_neighbourhood(data: CreateNeighbourhoodExpression) -> ExternResult<()> {
-    let key = Key(data.key);
-    let key_hash = hash_entry(&key)?;
+pub fn index_neighbourhood(data: NeighbourhoodExpression) -> ExternResult<EntryHash> {
+    let neighbourhood_expression_hash = hash_entry(&data)?;
+    create_entry(&data)?;
 
-    create_entry(&key)?;
-
-    let neighbourhood_expression_hash = hash_entry(&data.neighbourhood)?;
-    create_entry(&data.neighbourhood)?;
-
-    //Link profile entry to did
-    create_link(
-        key_hash,
-        neighbourhood_expression_hash,
-        LinkTag::from("".as_bytes().to_owned()),
-    )?;
-
-    Ok(())
+    Ok(neighbourhood_expression_hash)
 }
 
 #[hdk_extern]
-pub fn get_neighbourhood(key: String) -> ExternResult<Option<NeighbourhoodExpression>> {
-    let expression_links = get_latest_link(
-        hash_entry(&Key(key))?,
-        Some(LinkTag::from("".as_bytes().to_owned())),
-    )
-    .map_err(|error| err(format!("{}", error).as_ref()))?;
-
-    match expression_links {
-        Some(link) => {
-            match get(link.target, GetOptions::default())
-                .map_err(|error| err(format!("{}", error).as_ref()))? {
-                    Some(elem) => {
-                        let exp_data: NeighbourhoodExpression = elem
-                            .entry()
-                            .to_app_option()?
-                            .ok_or(WasmError::Host(String::from(
-                                "Could not deserialize link expression data into Profile type",
-                            )))?;
-                        Ok(Some(exp_data))
-                    },
-                    None => Ok(None)
-                }
+pub fn get_neighbourhood(key: EntryHash) -> ExternResult<Option<NeighbourhoodExpression>> {
+    match get(key, GetOptions::default())
+        .map_err(|error| err(format!("{}", error).as_ref()))? {
+            Some(elem) => {
+                let exp_data: NeighbourhoodExpression = elem
+                    .entry()
+                    .to_app_option()?
+                    .ok_or(WasmError::Host(String::from(
+                        "Could not deserialize link expression data into Profile type",
+                    )))?;
+                Ok(Some(exp_data))
+            },
+            None => Ok(None)
         }
-        None => Ok(None)
-    }
 }

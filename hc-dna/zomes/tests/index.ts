@@ -18,7 +18,7 @@ orchestrator.registerScenario("create and get neighbourhood", async (s, t) => {
   const [alice] = await s.players([conductorConfig])
   const [[alice_happ]] = await alice.installAgentsHapps(installation)
 
-  await alice_happ.cells[0].call("neighbourhood_store", "index_neighbourhood",  
+  let neighbourhoodHash = await alice_happ.cells[0].call("neighbourhood_store", "index_neighbourhood",  
     {
       neighbourhood: {
         author: "did:key:zQ3shc5AcaZyRo6qP3wuXvYT8xtiyFFL25RjMEuT81WMHEibC",
@@ -56,7 +56,7 @@ orchestrator.registerScenario("create and get neighbourhood", async (s, t) => {
     }
   )
 
-  let getResp = await alice_happ.cells[0].call("neighbourhood_store", "get_neighbourhood", "test");
+  let getResp = await alice_happ.cells[0].call("neighbourhood_store", "get_neighbourhood", neighbourhoodHash);
   t.ok(getResp);
 })
 
