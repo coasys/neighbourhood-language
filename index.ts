@@ -15,7 +15,7 @@ export class UI implements ExpressionUI {
   }
 }
 
-export const name = "shared-perspectives";
+export const name = "neighbourhood-store";
 
 export default function create(context: LanguageContext): Language {
   const expressionAdapter = new Adapter(context);
