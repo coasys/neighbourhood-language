@@ -17,7 +17,7 @@
     "@rollup/plugin-node-resolve": "^8.0.0",
     "@rollup/plugin-typescript": "^4.0.0",
     "@tsconfig/svelte": "^1.0.0",
-    "@types/node": "^14.14.37",
+    "@types/node": "^14.17.5",
     "node-sass": "^4.14.1",
     "rollup": "^2.3.4",
     "rollup-plugin-postcss": "^3.1.8",

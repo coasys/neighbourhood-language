@@ -16,4 +16,4 @@ chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1.0.20"
 
 hdk = "0.0.101-alpha.0"
-holo_hash = "0.0.2-alpha.1"
+holo_hash = { version = "0.0.2-alpha.1",  features = ["string-encoding"] }

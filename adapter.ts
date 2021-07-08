@@ -30,7 +30,7 @@ class SharedPerspectivePutAdapter implements PublicSharing {
       "index_neighbourhood",
       expression
     );
-    return resp;
+    return resp.toString("hex");
     // const agent = this.#agent;
     // const expression = agent.createSignedExpression(neighbourhood);
     // const content = JSON.stringify(expression);
@@ -63,11 +63,12 @@ export default class Adapter implements ExpressionAdapter {
     // const fileJson = JSON.parse(fileString);
     // return fileJson;
     // const cid = address.toString();
+    const hash = Buffer.from(address, "hex");
     const res = await this.#hcDna.call(
       DNA_NICK,
       "neighbourhood_store",
       "get_neighbourhood",
-      address
+      hash
     );
     return res;
   }

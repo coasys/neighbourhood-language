@@ -82,7 +82,7 @@ pub fn index_neighbourhood(data: NeighbourhoodExpression) -> ExternResult<EntryH
 }
 
 #[hdk_extern]
-pub fn get_neighbourhood(key: EntryHash) -> ExternResult<Option<NeighbourhoodExpression>> {
+pub fn get_neighbourhood(key: AnyDhtHash) -> ExternResult<Option<NeighbourhoodExpression>> {
     match get(key, GetOptions::default())
         .map_err(|error| err(format!("{}", error).as_ref()))? {
             Some(elem) => {
@@ -90,7 +90,7 @@ pub fn get_neighbourhood(key: EntryHash) -> ExternResult<Option<NeighbourhoodExp
                     .entry()
                     .to_app_option()?
                     .ok_or(WasmError::Host(String::from(
-                        "Could not deserialize link expression data into Profile type",
+                        "Could not deserialize link expression data into NeighbourhoodExpression type",
                     )))?;
                 Ok(Some(exp_data))
             },
