@@ -1,6 +1,5 @@
-import type { Address, Language, LanguageContext, ExpressionUI, Interaction, HolochainLanguageDelegate } from "@perspect3vism/ad4m";
+import type { Address, Language, LanguageContext, ExpressionUI, Interaction } from "@perspect3vism/ad4m";
 import Adapter from "./adapter";
-//import { DNA, DNA_NICK } from "./dna";
 
 function interactions(expression: Address): Interaction[] {
   return [];
@@ -17,6 +16,8 @@ export class UI implements ExpressionUI {
 }
 
 export const name = "neighbourhood-store";
+
+export const PROXY_URL = "https://bootstrap-store-gateway.perspect3vism.workers.dev/";
 
 export default async function create(context: LanguageContext): Promise<Language> {
   //const Holochain = context.Holochain as HolochainLanguageDelegate;

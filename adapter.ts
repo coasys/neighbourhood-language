@@ -1,78 +1,77 @@
-import type { Address, Expression, ExpressionAdapter, PublicSharing, IPFSNode, LanguageContext, AgentService, HolochainLanguageDelegate } from "@perspect3vism/ad4m";
-//import { DNA_NICK } from "./dna";
+import type { Address, Expression, ExpressionAdapter, PublicSharing, LanguageContext, AgentService } from "@perspect3vism/ad4m";
+import type { IPFS } from "ipfs-core-types"
+import axios from "axios";
+import https from "https";
+import { PROXY_URL } from ".";
 
-const _appendBuffer = (buffer1, buffer2) => {
-  const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-  tmp.set(new Uint8Array(buffer1), 0);
-  tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
-  return tmp.buffer;
-};
-
-const uint8ArrayConcat = (chunks) => {
-  return chunks.reduce(_appendBuffer);
-};
-
-class SharedPerspectivePutAdapter implements PublicSharing {
+class NeighbourhoodPutAdapter implements PublicSharing {
   #agent: AgentService;
-  //#hcDna: HolochainLanguageDelegate;
-  #IPFS: IPFSNode
+  #IPFS: IPFS
 
   constructor(context: LanguageContext) {
     this.#agent = context.agent;
-    //this.#hcDna = context.Holochain as HolochainLanguageDelegate;
     this.#IPFS = context.IPFS;
   }
 
   async createPublic(neighbourhood: object): Promise<Address> {
-    // const expression = this.#agent.createSignedExpression(neighbourhood);
-    
-    // let resp = await this.#hcDna.call(
-    //   DNA_NICK,
-    //   "neighbourhood_store",
-    //   "index_neighbourhood",
-    //   expression
-    // );
-    // return resp.toString("hex");
+    const ipfsAddress = await this.#IPFS.add(
+      { content: JSON.stringify(neighbourhood)},
+      { onlyHash: true},
+    );
+    // @ts-ignore
+    const hash = ipfsAddress.cid.toString();
+
     const agent = this.#agent;
     const expression = agent.createSignedExpression(neighbourhood);
-    const content = JSON.stringify(expression);
-    const result = await this.#IPFS.add({ content });
-    // @ts-ignore
-    return result.cid.toString() as Address;
+
+    //Build the key value object for the neighbourhood object
+    const key = hash;
+    const neighbourhoodPostData = {
+      key: key,
+      // Content of the new object.
+      value: JSON.stringify(expression),
+    };
+    //Save the neighbourhood information to the KV store
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+    const neighbourhoodPostResult = await axios.post(PROXY_URL, neighbourhoodPostData, { httpsAgent });
+    if (neighbourhoodPostResult.status != 200) {
+      console.error("Upload neighbourhood data gets error: ", neighbourhoodPostResult);
+    }
+
+    return hash as Address;
   }
 }
 
 export default class Adapter implements ExpressionAdapter {
-  //#hcDna: HolochainLanguageDelegate;
-  #IPFS: IPFSNode
-
   putAdapter: PublicSharing;
 
   constructor(context: LanguageContext) {
-    //this.#hcDna = context.Holochain as HolochainLanguageDelegate;
-    this.#IPFS = context.IPFS;
-    this.putAdapter = new SharedPerspectivePutAdapter(context);
+    this.putAdapter = new NeighbourhoodPutAdapter(context);
   }
 
   async get(address: Address): Promise<Expression> {
     const cid = address.toString();
 
-    const chunks = [];
-    // @ts-ignore
-    for await (const chunk of this.#IPFS.cat(cid)) {
-      chunks.push(chunk);
+    let presignedUrl;
+    try {
+      const getPresignedUrl = await axios.get(PROXY_URL+`?key=${cid}`);
+      presignedUrl = getPresignedUrl.data;
+      console.log("Get neighbourhood got presigned url", presignedUrl);
+    } catch (e) {
+      console.error("Get neighbourhood failed at getting presigned url", e);
     }
 
-    const fileString = uint8ArrayConcat(chunks).toString();
-    const fileJson = JSON.parse(fileString);
-    return fileJson;
-    // const hash = Buffer.from(address, "hex");
-    // const res = await this.#hcDna.call(
-    //   DNA_NICK,
-    //   "neighbourhood_store",
-    //   "get_neighbourhood",
-    //   hash
-    // );
-    // return res;
+    let neighbourhoodObject;
+    try {
+      const getneighbourhoodObject = await axios.get(presignedUrl);
+      neighbourhoodObject = getneighbourhoodObject.data;
+      console.log("Get meta object for obj", neighbourhoodObject);
+    } catch (e) {
+      console.error("Get meta information failed at getting meta information", e);
+    }
+
+    return JSON.parse(neighbourhoodObject);
   }
 }
