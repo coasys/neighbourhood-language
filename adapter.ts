@@ -57,8 +57,7 @@ export default class Adapter implements ExpressionAdapter {
     let presignedUrl;
     try {
       const getPresignedUrl = await axios.get(PROXY_URL+`?key=${cid}`);
-      presignedUrl = getPresignedUrl.data;
-      console.log("Get neighbourhood got presigned url", presignedUrl);
+      presignedUrl = getPresignedUrl.data.url;
     } catch (e) {
       console.error("Get neighbourhood failed at getting presigned url", e);
     }
@@ -67,11 +66,10 @@ export default class Adapter implements ExpressionAdapter {
     try {
       const getneighbourhoodObject = await axios.get(presignedUrl);
       neighbourhoodObject = getneighbourhoodObject.data;
-      console.log("Get meta object for obj", neighbourhoodObject);
     } catch (e) {
       console.error("Get meta information failed at getting meta information", e);
     }
 
-    return JSON.parse(neighbourhoodObject);
+    return neighbourhoodObject;
   }
 }

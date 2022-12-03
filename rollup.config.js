@@ -1,11 +1,9 @@
 import svelte from 'rollup-plugin-svelte';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-//import { terser } from 'rollup-plugin-terser';
 import sveltePreprocess from 'svelte-preprocess';
 import postcss from "rollup-plugin-postcss";
 import { string } from 'rollup-plugin-string'
-import dna from '@perspect3vism/rollup-plugin-dna'
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -38,7 +36,7 @@ export default {
 		// consult the documentation for details:
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
 		resolve({
-			browser: true,
+			browser: false,
 			dedupe: ['svelte']
 		}),
 		commonjs(),
@@ -53,8 +51,7 @@ export default {
 				]
 			  }]
 			]
-		  }),
-		dna()
+		})
 	],
 	watch: {
 		clearScreen: false
